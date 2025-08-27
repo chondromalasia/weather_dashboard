@@ -6,8 +6,18 @@
 </head>
 <body>
     <div class="container">
-        <h1>Rui sucks at foosball</h1>
-        <p>That is it thats the webpage</p>
+        <h1>Weather Dashboard</h1>
+        
+        <div class="status-section">
+            <h2>API Status</h2>
+            {% if api_status.error %}
+                <p style="color: red;">Error: {{ api_status.error }}</p>
+            {% else %}
+                <p><strong>Status:</strong> {{ api_status.status }}</p>
+                <p><strong>Message:</strong> {{ api_status.message }}</p>
+                <p><strong>Timestamp:</strong> {{ api_status.timestamp }}</p>
+            {% endif %}
+        </div>
     </div>
     
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
