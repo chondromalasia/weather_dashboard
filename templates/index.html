@@ -12,6 +12,9 @@
             <h2>API Status</h2>
             {% if api_status.error %}
                 <p style="color: red;">Error: {{ api_status.error }}</p>
+                {% if api_status.details %}
+                    <p style="color: red; font-size: 12px;">Details: {{ api_status.details }}</p>
+                {% endif %}
             {% else %}
                 <p><strong>Status:</strong> {{ api_status.status }}</p>
                 <p><strong>Message:</strong> {{ api_status.message }}</p>
