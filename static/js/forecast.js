@@ -18,6 +18,7 @@ async function loadLocations() {
         }
 
         const data = await response.json();
+        console.log('API Response:', data);
 
         if (data.error) {
             dropdown.innerHTML = '<option value="">Error loading locations</option>';
@@ -31,9 +32,12 @@ async function loadLocations() {
         // Populate dropdown with locations
         if (data.locations && Array.isArray(data.locations)) {
             data.locations.forEach(item => {
+                console.log('Location item:', item);
                 const option = document.createElement('option');
-                option.value = item.location;
-                option.textContent = item.location;
+                // Handle different possible structures
+                const locationValue = item.location || item.name || item;
+                option.value = typeof locationValue === 'string' ? locationValue : JSON.stringify(locationValue);
+                option.textContent = typeof locationValue === 'string' ? locationValue : JSON.stringify(locationValue);
                 dropdown.appendChild(option);
             });
         } else {
