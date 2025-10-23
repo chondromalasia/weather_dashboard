@@ -29,22 +29,16 @@ async function loadLocations() {
         dropdown.innerHTML = '<option value="">-- Select a location --</option>';
 
         // Populate dropdown with locations
-        // Assuming the API returns an array of location objects
-        if (Array.isArray(data)) {
-            data.forEach(location => {
+        if (data.locations && Array.isArray(data.locations)) {
+            data.locations.forEach(item => {
                 const option = document.createElement('option');
-                // Adjust these properties based on actual API response structure
-                option.value = typeof location === 'string' ? location : (location.id || location.name || location);
-                option.textContent = typeof location === 'string' ? location : (location.name || location.id || location);
+                option.value = item.location;
+                option.textContent = item.location;
                 dropdown.appendChild(option);
             });
-        } else if (data.locations && Array.isArray(data.locations)) {
-            data.locations.forEach(location => {
-                const option = document.createElement('option');
-                option.value = typeof location === 'string' ? location : (location.id || location.name || location);
-                option.textContent = typeof location === 'string' ? location : (location.name || location.id || location);
-                dropdown.appendChild(option);
-            });
+        } else {
+            console.warn('Unexpected data structure:', data);
+            dropdown.innerHTML = '<option value="">No locations available</option>';
         }
 
     } catch (error) {
