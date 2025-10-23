@@ -32,12 +32,10 @@ async function loadLocations() {
         // Populate dropdown with locations
         if (data.locations && Array.isArray(data.locations)) {
             data.locations.forEach(item => {
-                console.log('Location item:', item);
+                console.log('Location item:', item, 'Type:', typeof item, 'Value:', item.location);
                 const option = document.createElement('option');
-                // Handle different possible structures
-                const locationValue = item.location || item.name || item;
-                option.value = typeof locationValue === 'string' ? locationValue : JSON.stringify(locationValue);
-                option.textContent = typeof locationValue === 'string' ? locationValue : JSON.stringify(locationValue);
+                option.value = item.location;
+                option.textContent = item.location;
                 dropdown.appendChild(option);
             });
         } else {
