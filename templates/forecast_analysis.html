@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Forecast Analysis - Weather Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Forecast Analysis</h1>
+
+        <div class="navigation">
+            <a href="/" class="nav-link">Back to Dashboard</a>
+        </div>
+
+        <div class="forecast-section">
+            <div class="location-selector">
+                <label for="location-dropdown">Select Location:</label>
+                <select id="location-dropdown" class="dropdown">
+                    <option value="">Loading locations...</option>
+                </select>
+            </div>
+
+            <div id="selected-location-info" class="info-section">
+                <p class="info-text">Please select a location to view forecast analysis</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/forecast.js') }}"></script>
+</body>
+</html>

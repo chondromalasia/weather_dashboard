@@ -2,8 +2,12 @@ import os
 import requests
 import logging
 from flask import Flask, render_template, jsonify
+from forecast_analysis import forecast_bp
 
 app = Flask(__name__)
+
+# Register the forecast analysis blueprint
+app.register_blueprint(forecast_bp)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -27,7 +31,7 @@ def home():
             "error": f"Unable to connect to weather API at {WEATHER_API_URL}",
             "details": str(e)
         }
-    
+
     return render_template('index.html', api_status=api_data)
 
 
