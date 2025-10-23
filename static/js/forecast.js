@@ -9,9 +9,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadLocations() {
     const dropdown = document.getElementById('location-dropdown');
+    console.log('loadLocations called');
 
     try {
         const response = await fetch('/api/forecast/locations');
+        console.log('Fetch completed, status:', response.status);
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
