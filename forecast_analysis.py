@@ -55,3 +55,34 @@ def get_forecast_providers():
             "error": f"Unable to fetch forecast providers",
             "details": str(e)
         }), 500
+
+
+@forecast_bp.route('/api/forecast/highs')
+def get_forecast_highs():
+    """Fetch forecast highs from the weather API."""
+    from flask import request
+
+    location = request.args.get('location')
+    provider = request.args.get('provider')
+
+    if not location or not provider:
+        return jsonify({
+            "error": "Missing required parameters",
+            "details": "Both location and provider are required"
+        }), 400
+
+    try:
+        url = f"{WEATHER_API_URL}/forecast/highs?location={location}&provider={provider}"
+        logger.info(f"Fetching forecast highs from: {url}")
+        response = requests.get(url, timeout=10)
+        logger.info(f"Response status: {response.status_code}")
+        response.raise_for_status()
+        highs = response.json()
+        logger.info(f"Successfully fetched forecast highs")
+        return jsonify(highs)
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to fetch forecast highs: {e}")
+        return jsonify({
+            "error": f"Unable to fetch forecast highs",
+            "details": str(e)
+        }), 500

@@ -126,7 +126,7 @@ function setupProviderDropdown() {
     });
 }
 
-function updateLocationInfo() {
+async function updateLocationInfo() {
     const infoSection = document.getElementById('selected-location-info');
 
     if (!selectedLocation && !selectedProvider) {
@@ -138,15 +138,64 @@ function updateLocationInfo() {
 
     if (selectedLocation) {
         html += `<p><strong>Location:</strong> ${selectedLocation}</p>`;
-        html += `<p class="info-text">Location variable: <code>selectedLocation = "${selectedLocation}"</code></p>`;
     }
 
     if (selectedProvider) {
         html += `<p><strong>Provider:</strong> ${selectedProvider}</p>`;
-        html += `<p class="info-text">Provider variable: <code>selectedProvider = "${selectedProvider}"</code></p>`;
     }
 
     infoSection.innerHTML = html;
+
+    // Fetch forecast highs if both location and provider are selected
+    if (selectedLocation && selectedProvider) {
+        await fetchForecastHighs();
+    }
+}
+
+async function fetchForecastHighs() {
+    const infoSection = document.getElementById('selected-location-info');
+
+    try {
+        const url = `/api/forecast/highs?location=${encodeURIComponent(selectedLocation)}&provider=${encodeURIComponent(selectedProvider)}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+            showError(data.error, data.details);
+            return;
+        }
+
+        // Display the first 2 forecast highs
+        let html = `
+            <h3>Selected Parameters</h3>
+            <p><strong>Location:</strong> ${selectedLocation}</p>
+            <p><strong>Provider:</strong> ${selectedProvider}</p>
+            <hr>
+            <h3>Forecast Highs</h3>
+            <p><strong>Cutoff:</strong> ${data.cutoff}</p>
+        `;
+
+        if (data.forecasted_highs && data.forecasted_highs.length > 0) {
+            const displayCount = Math.min(2, data.forecasted_highs.length);
+            for (let i = 0; i < displayCount; i++) {
+                const forecast = data.forecasted_highs[i];
+                html += `<p><strong>${forecast.date}:</strong> ${forecast.forecasted_high}°F</p>`;
+            }
+        } else {
+            html += '<p class="info-text">No forecast data available</p>';
+        }
+
+        infoSection.innerHTML = html;
+
+    } catch (error) {
+        console.error('Error fetching forecast highs:', error);
+        showError('Failed to load forecast highs', error.message);
+    }
 }
 
 function clearLocationInfo() {
