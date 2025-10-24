@@ -9,18 +9,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadLocations() {
     const dropdown = document.getElementById('location-dropdown');
-    console.log('loadLocations called');
 
     try {
         const response = await fetch('/api/forecast/locations');
-        console.log('Fetch completed, status:', response.status);
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log('API Response:', data);
 
         if (data.error) {
             dropdown.innerHTML = '<option value="">Error loading locations</option>';
@@ -34,7 +31,6 @@ async function loadLocations() {
         // Populate dropdown with locations
         if (data.locations && Array.isArray(data.locations)) {
             data.locations.forEach(item => {
-                console.log('Location item:', item, 'Type:', typeof item, 'Value:', item.location);
                 const option = document.createElement('option');
                 option.value = item.location;
                 option.textContent = item.location;
