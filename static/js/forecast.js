@@ -1,10 +1,13 @@
-// Store the selected location globally for later use
+// Store the selected location and provider globally for later use
 let selectedLocation = null;
+let selectedProvider = null;
 
-// Fetch locations when page loads
+// Fetch locations and providers when page loads
 document.addEventListener('DOMContentLoaded', async () => {
     await loadLocations();
+    await loadProviders();
     setupLocationDropdown();
+    setupProviderDropdown();
 });
 
 async function loadLocations() {
@@ -56,7 +59,7 @@ function setupLocationDropdown() {
 
         if (value) {
             selectedLocation = value;
-            updateLocationInfo(value);
+            updateLocationInfo();
         } else {
             selectedLocation = null;
             clearLocationInfo();
@@ -64,18 +67,89 @@ function setupLocationDropdown() {
     });
 }
 
-function updateLocationInfo(location) {
+async function loadProviders() {
+    const dropdown = document.getElementById('provider-dropdown');
+
+    try {
+        const response = await fetch('/api/forecast/providers');
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+            dropdown.innerHTML = '<option value="">Error loading providers</option>';
+            showError(data.error, data.details);
+            return;
+        }
+
+        // Clear the dropdown
+        dropdown.innerHTML = '<option value="">-- Select a provider --</option>';
+
+        // Populate dropdown with providers
+        if (data.providers && Array.isArray(data.providers)) {
+            data.providers.forEach(provider => {
+                const option = document.createElement('option');
+                option.value = provider;
+                option.textContent = provider;
+                dropdown.appendChild(option);
+            });
+        } else {
+            console.warn('Unexpected data structure:', data);
+            dropdown.innerHTML = '<option value="">No providers available</option>';
+        }
+
+    } catch (error) {
+        console.error('Error fetching providers:', error);
+        dropdown.innerHTML = '<option value="">Error loading providers</option>';
+        showError('Failed to load providers', error.message);
+    }
+}
+
+function setupProviderDropdown() {
+    const dropdown = document.getElementById('provider-dropdown');
+
+    dropdown.addEventListener('change', (event) => {
+        const value = event.target.value;
+
+        if (value) {
+            selectedProvider = value;
+            updateLocationInfo();
+        } else {
+            selectedProvider = null;
+            clearLocationInfo();
+        }
+    });
+}
+
+function updateLocationInfo() {
     const infoSection = document.getElementById('selected-location-info');
-    infoSection.innerHTML = `
-        <h3>Selected Location</h3>
-        <p><strong>Location:</strong> ${location}</p>
-        <p class="info-text">Location variable is ready for use: <code>selectedLocation = "${location}"</code></p>
-    `;
+
+    if (!selectedLocation && !selectedProvider) {
+        clearLocationInfo();
+        return;
+    }
+
+    let html = '<h3>Selected Parameters</h3>';
+
+    if (selectedLocation) {
+        html += `<p><strong>Location:</strong> ${selectedLocation}</p>`;
+        html += `<p class="info-text">Location variable: <code>selectedLocation = "${selectedLocation}"</code></p>`;
+    }
+
+    if (selectedProvider) {
+        html += `<p><strong>Provider:</strong> ${selectedProvider}</p>`;
+        html += `<p class="info-text">Provider variable: <code>selectedProvider = "${selectedProvider}"</code></p>`;
+    }
+
+    infoSection.innerHTML = html;
 }
 
 function clearLocationInfo() {
     const infoSection = document.getElementById('selected-location-info');
-    infoSection.innerHTML = '<p class="info-text">Please select a location to view forecast analysis</p>';
+    infoSection.innerHTML = '<p class="info-text">Please select a location and/or provider to view forecast analysis</p>';
 }
 
 function showError(error, details) {

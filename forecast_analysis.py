@@ -36,3 +36,22 @@ def get_forecast_locations():
             "error": f"Unable to fetch forecast locations",
             "details": str(e)
         }), 500
+
+
+@forecast_bp.route('/api/forecast/providers')
+def get_forecast_providers():
+    """Fetch available forecast providers from the weather API."""
+    try:
+        logger.info(f"Fetching forecast providers from: {WEATHER_API_URL}/forecast/providers")
+        response = requests.get(f"{WEATHER_API_URL}/forecast/providers", timeout=10)
+        logger.info(f"Response status: {response.status_code}")
+        response.raise_for_status()
+        providers = response.json()
+        logger.info(f"Successfully fetched forecast providers")
+        return jsonify(providers)
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to fetch forecast providers: {e}")
+        return jsonify({
+            "error": f"Unable to fetch forecast providers",
+            "details": str(e)
+        }), 500
