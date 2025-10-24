@@ -90,10 +90,12 @@ async function loadProviders() {
 
         // Populate dropdown with providers
         if (data.providers && Array.isArray(data.providers)) {
-            data.providers.forEach(provider => {
+            data.providers.forEach(item => {
                 const option = document.createElement('option');
-                option.value = provider;
-                option.textContent = provider;
+                // Handle both string and object formats
+                const providerName = typeof item === 'string' ? item : (item.provider || item.name || JSON.stringify(item));
+                option.value = providerName;
+                option.textContent = providerName;
                 dropdown.appendChild(option);
             });
         } else {
