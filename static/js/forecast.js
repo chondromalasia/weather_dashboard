@@ -155,113 +155,17 @@ async function updateLocationInfo() {
 async function fetchForecastHighs() {
     const infoSection = document.getElementById('selected-location-info');
 
-    try {
-        const url = `/api/forecast/highs?location=${encodeURIComponent(selectedLocation)}&provider=${encodeURIComponent(selectedProvider)}`;
-        const response = await fetch(url);
+    // Display selected parameters
+    let html = `
+        <h3>Selected Parameters</h3>
+        <p><strong>Location:</strong> ${selectedLocation}</p>
+        <p><strong>Provider:</strong> ${selectedProvider}</p>
+    `;
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+    infoSection.innerHTML = html;
 
-        const data = await response.json();
-
-        if (data.error) {
-            showError(data.error, data.details);
-            return;
-        }
-
-        // Display the first 2 forecast highs
-        let html = `
-            <h3>Selected Parameters</h3>
-            <p><strong>Location:</strong> ${selectedLocation}</p>
-            <p><strong>Provider:</strong> ${selectedProvider}</p>
-            <hr>
-            <h3>Forecast Highs</h3>
-            <p><strong>Cutoff:</strong> ${data.cutoff}</p>
-        `;
-
-        if (data.forecasted_highs && data.forecasted_highs.length > 0) {
-            const displayCount = Math.min(2, data.forecasted_highs.length);
-            for (let i = 0; i < displayCount; i++) {
-                const forecast = data.forecasted_highs[i];
-                html += `<p><strong>${forecast.date}:</strong> ${forecast.forecasted_high}°F</p>`;
-            }
-
-            // Extract the oldest date (first item in the array)
-            const oldestDate = data.forecasted_highs[0].date;
-
-            infoSection.innerHTML = html;
-
-            // Fetch observations using the oldest date
-            await fetchObservationHighs(oldestDate);
-
-            // Fetch comparison analysis
-            await fetchComparisonAnalysis();
-        } else {
-            html += '<p class="info-text">No forecast data available</p>';
-            infoSection.innerHTML = html;
-        }
-
-    } catch (error) {
-        console.error('Error fetching forecast highs:', error);
-        showError('Failed to load forecast highs', error.message);
-    }
-}
-
-async function fetchObservationHighs(startDate) {
-    const infoSection = document.getElementById('selected-location-info');
-
-    try {
-        const url = `/api/observations/highs?station_id=${encodeURIComponent(selectedLocation)}&service=CLI&start=${encodeURIComponent(startDate)}`;
-        const response = await fetch(url);
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        if (data.error) {
-            // Append error to existing content
-            infoSection.innerHTML += `
-                <hr>
-                <h3>Observation Highs</h3>
-                <p style="color: red;"><strong>Error:</strong> ${data.error}</p>
-            `;
-            return;
-        }
-
-        // Append observations to existing content
-        let html = `
-            <hr>
-            <h3>Observation Highs</h3>
-            <p><strong>Start Date:</strong> ${startDate}</p>
-            <p><strong>Service:</strong> CLI</p>
-            <p><strong>Count:</strong> ${data.count}</p>
-        `;
-
-        if (data.observations && data.observations.length > 0) {
-            const displayCount = Math.min(2, data.observations.length);
-            for (let i = 0; i < displayCount; i++) {
-                const observation = data.observations[i];
-                // Extract just the date from the timestamp
-                const dateOnly = observation.timestamp.split('T')[0];
-                html += `<p><strong>${dateOnly}:</strong> ${parseFloat(observation.value).toFixed(1)}°${observation.unit}</p>`;
-            }
-        } else {
-            html += '<p class="info-text">No observation data available</p>';
-        }
-
-        infoSection.innerHTML += html;
-
-    } catch (error) {
-        console.error('Error fetching observation highs:', error);
-        infoSection.innerHTML += `
-            <hr>
-            <h3>Observation Highs</h3>
-            <p style="color: red;"><strong>Error:</strong> Failed to load observation highs</p>
-        `;
-    }
+    // Fetch comparison analysis
+    await fetchComparisonAnalysis();
 }
 
 function clearLocationInfo() {
@@ -300,23 +204,16 @@ async function fetchComparisonAnalysis() {
             return;
         }
 
-        // Build HTML for summary statistics
+        // Build HTML starting with error histogram
         let html = `
             <hr>
             <h3>Forecast Comparison Analysis</h3>
-            <h4>Summary Statistics</h4>
-            <p><strong>Sample Size:</strong> ${data.summary.count} days</p>
-            <p><strong>Mean Error:</strong> ${data.summary.mean_error.toFixed(2)}°F</p>
-            <p><strong>Mean Absolute Error (MAE):</strong> ${data.summary.mean_absolute_error.toFixed(2)}°F</p>
-            <p><strong>Root Mean Square Error (RMSE):</strong> ${data.summary.rmse.toFixed(2)}°F</p>
-            <p><strong>Max Error:</strong> ${data.summary.max_error.toFixed(2)}°F</p>
-            <p><strong>Min Error:</strong> ${data.summary.min_error.toFixed(2)}°F</p>
+            <h4>Error Distribution</h4>
         `;
 
         // Build HTML for error histogram
         if (data.error_histogram && data.error_histogram.length > 0) {
             html += `
-                <h4>Error Distribution</h4>
                 <table style="border-collapse: collapse; width: 100%; max-width: 400px;">
                     <thead>
                         <tr style="border-bottom: 2px solid #333;">
@@ -345,6 +242,17 @@ async function fetchComparisonAnalysis() {
         } else {
             html += '<p class="info-text">No error distribution data available</p>';
         }
+
+        // Add summary statistics after error distribution
+        html += `
+            <h4>Summary Statistics</h4>
+            <p><strong>Sample Size:</strong> ${data.summary.count} days</p>
+            <p><strong>Mean Error:</strong> ${data.summary.mean_error.toFixed(2)}°F</p>
+            <p><strong>Mean Absolute Error (MAE):</strong> ${data.summary.mean_absolute_error.toFixed(2)}°F</p>
+            <p><strong>Root Mean Square Error (RMSE):</strong> ${data.summary.rmse.toFixed(2)}°F</p>
+            <p><strong>Max Error:</strong> ${data.summary.max_error.toFixed(2)}°F</p>
+            <p><strong>Min Error:</strong> ${data.summary.min_error.toFixed(2)}°F</p>
+        `;
 
         infoSection.innerHTML += html;
 
