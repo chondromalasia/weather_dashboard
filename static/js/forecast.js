@@ -234,13 +234,16 @@ async function fetchObservationHighs(startDate) {
             <h3>Observation Highs</h3>
             <p><strong>Start Date:</strong> ${startDate}</p>
             <p><strong>Service:</strong> CLI</p>
+            <p><strong>Count:</strong> ${data.count}</p>
         `;
 
-        if (data.observed_highs && data.observed_highs.length > 0) {
-            const displayCount = Math.min(2, data.observed_highs.length);
+        if (data.observations && data.observations.length > 0) {
+            const displayCount = Math.min(2, data.observations.length);
             for (let i = 0; i < displayCount; i++) {
-                const observation = data.observed_highs[i];
-                html += `<p><strong>${observation.date}:</strong> ${observation.observed_high}°F</p>`;
+                const observation = data.observations[i];
+                // Extract just the date from the timestamp
+                const dateOnly = observation.timestamp.split('T')[0];
+                html += `<p><strong>${dateOnly}:</strong> ${parseFloat(observation.value).toFixed(1)}°${observation.unit}</p>`;
             }
         } else {
             html += '<p class="info-text">No observation data available</p>';
