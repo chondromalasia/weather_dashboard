@@ -186,15 +186,75 @@ async function fetchForecastHighs() {
                 const forecast = data.forecasted_highs[i];
                 html += `<p><strong>${forecast.date}:</strong> ${forecast.forecasted_high}°F</p>`;
             }
+
+            // Extract the oldest date (last item in the array)
+            const oldestDate = data.forecasted_highs[data.forecasted_highs.length - 1].date;
+
+            infoSection.innerHTML = html;
+
+            // Fetch observations using the oldest date
+            await fetchObservationHighs(oldestDate);
         } else {
             html += '<p class="info-text">No forecast data available</p>';
+            infoSection.innerHTML = html;
         }
-
-        infoSection.innerHTML = html;
 
     } catch (error) {
         console.error('Error fetching forecast highs:', error);
         showError('Failed to load forecast highs', error.message);
+    }
+}
+
+async function fetchObservationHighs(startDate) {
+    const infoSection = document.getElementById('selected-location-info');
+
+    try {
+        const url = `/api/observations/highs?station_id=${encodeURIComponent(selectedLocation)}&service=CLI&start=${encodeURIComponent(startDate)}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+            // Append error to existing content
+            infoSection.innerHTML += `
+                <hr>
+                <h3>Observation Highs</h3>
+                <p style="color: red;"><strong>Error:</strong> ${data.error}</p>
+            `;
+            return;
+        }
+
+        // Append observations to existing content
+        let html = `
+            <hr>
+            <h3>Observation Highs</h3>
+            <p><strong>Start Date:</strong> ${startDate}</p>
+            <p><strong>Service:</strong> CLI</p>
+        `;
+
+        if (data.observed_highs && data.observed_highs.length > 0) {
+            const displayCount = Math.min(2, data.observed_highs.length);
+            for (let i = 0; i < displayCount; i++) {
+                const observation = data.observed_highs[i];
+                html += `<p><strong>${observation.date}:</strong> ${observation.observed_high}°F</p>`;
+            }
+        } else {
+            html += '<p class="info-text">No observation data available</p>';
+        }
+
+        infoSection.innerHTML += html;
+
+    } catch (error) {
+        console.error('Error fetching observation highs:', error);
+        infoSection.innerHTML += `
+            <hr>
+            <h3>Observation Highs</h3>
+            <p style="color: red;"><strong>Error:</strong> Failed to load observation highs</p>
+        `;
     }
 }
 

@@ -86,3 +86,35 @@ def get_forecast_highs():
             "error": f"Unable to fetch forecast highs",
             "details": str(e)
         }), 500
+
+
+@forecast_bp.route('/api/observations/highs')
+def get_observation_highs():
+    """Fetch observation highs from the weather API."""
+    from flask import request
+
+    station_id = request.args.get('station_id')
+    service = request.args.get('service')
+    start = request.args.get('start')
+
+    if not station_id or not service or not start:
+        return jsonify({
+            "error": "Missing required parameters",
+            "details": "station_id, service, and start are required"
+        }), 400
+
+    try:
+        url = f"{WEATHER_API_URL}/observations/highs?station_id={station_id}&service={service}&start={start}"
+        logger.info(f"Fetching observation highs from: {url}")
+        response = requests.get(url, timeout=10)
+        logger.info(f"Response status: {response.status_code}")
+        response.raise_for_status()
+        observations = response.json()
+        logger.info(f"Successfully fetched observation highs")
+        return jsonify(observations)
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to fetch observation highs: {e}")
+        return jsonify({
+            "error": f"Unable to fetch observation highs",
+            "details": str(e)
+        }), 500
