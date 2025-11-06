@@ -194,6 +194,9 @@ async function fetchForecastHighs() {
 
             // Fetch observations using the oldest date
             await fetchObservationHighs(oldestDate);
+
+            // Fetch comparison analysis
+            await fetchComparisonAnalysis();
         } else {
             html += '<p class="info-text">No forecast data available</p>';
             infoSection.innerHTML = html;
@@ -272,4 +275,85 @@ function showError(error, details) {
         <p style="color: red;"><strong>Error:</strong> ${error}</p>
         ${details ? `<p style="color: red; font-size: 12px;">${details}</p>` : ''}
     `;
+}
+
+async function fetchComparisonAnalysis() {
+    const infoSection = document.getElementById('selected-location-info');
+
+    try {
+        const url = `/api/forecast/comparison?location=${encodeURIComponent(selectedLocation)}&provider=${encodeURIComponent(selectedProvider)}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+            // Append error to existing content
+            infoSection.innerHTML += `
+                <hr>
+                <h3>Forecast Comparison Analysis</h3>
+                <p style="color: red;"><strong>Error:</strong> ${data.error}</p>
+            `;
+            return;
+        }
+
+        // Build HTML for summary statistics
+        let html = `
+            <hr>
+            <h3>Forecast Comparison Analysis</h3>
+            <h4>Summary Statistics</h4>
+            <p><strong>Sample Size:</strong> ${data.summary.count} days</p>
+            <p><strong>Mean Error:</strong> ${data.summary.mean_error.toFixed(2)}°F</p>
+            <p><strong>Mean Absolute Error (MAE):</strong> ${data.summary.mean_absolute_error.toFixed(2)}°F</p>
+            <p><strong>Root Mean Square Error (RMSE):</strong> ${data.summary.rmse.toFixed(2)}°F</p>
+            <p><strong>Max Error:</strong> ${data.summary.max_error.toFixed(2)}°F</p>
+            <p><strong>Min Error:</strong> ${data.summary.min_error.toFixed(2)}°F</p>
+        `;
+
+        // Build HTML for error histogram
+        if (data.error_histogram && data.error_histogram.length > 0) {
+            html += `
+                <h4>Error Distribution</h4>
+                <table style="border-collapse: collapse; width: 100%; max-width: 400px;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #333;">
+                            <th style="text-align: left; padding: 8px;">Error (°F)</th>
+                            <th style="text-align: right; padding: 8px;">Count</th>
+                            <th style="text-align: right; padding: 8px;">Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            data.error_histogram.forEach(row => {
+                html += `
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td style="padding: 8px;">${row['Error (°F)'].toFixed(1)}</td>
+                        <td style="text-align: right; padding: 8px;">${row['Count']}</td>
+                        <td style="text-align: right; padding: 8px;">${row['Percentage']}%</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+        } else {
+            html += '<p class="info-text">No error distribution data available</p>';
+        }
+
+        infoSection.innerHTML += html;
+
+    } catch (error) {
+        console.error('Error fetching comparison analysis:', error);
+        infoSection.innerHTML += `
+            <hr>
+            <h3>Forecast Comparison Analysis</h3>
+            <p style="color: red;"><strong>Error:</strong> Failed to load comparison analysis</p>
+        `;
+    }
 }

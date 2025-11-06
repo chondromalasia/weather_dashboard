@@ -2,6 +2,7 @@ import os
 import requests
 import logging
 from flask import Blueprint, render_template, jsonify
+from forecast_comparison import create_forecast_comparison_df, error_histogram, get_comparison_summary
 
 # Create a Blueprint for forecast analysis
 forecast_bp = Blueprint('forecast', __name__)
@@ -116,5 +117,75 @@ def get_observation_highs():
         logger.error(f"Failed to fetch observation highs: {e}")
         return jsonify({
             "error": f"Unable to fetch observation highs",
+            "details": str(e)
+        }), 500
+
+
+@forecast_bp.route('/api/forecast/comparison')
+def get_forecast_comparison():
+    """Fetch forecast and observation data, then create comparison analysis."""
+    from flask import request
+
+    location = request.args.get('location')
+    provider = request.args.get('provider')
+
+    if not location or not provider:
+        return jsonify({
+            "error": "Missing required parameters",
+            "details": "Both location and provider are required"
+        }), 400
+
+    try:
+        # Fetch forecast data
+        forecast_url = f"{WEATHER_API_URL}/forecast/highs?location={location}&provider={provider}"
+        logger.info(f"Fetching forecast highs from: {forecast_url}")
+        forecast_response = requests.get(forecast_url, timeout=10)
+        forecast_response.raise_for_status()
+        forecast_data = forecast_response.json()
+
+        # Get oldest date from forecasts
+        if not forecast_data.get('forecasted_highs') or len(forecast_data['forecasted_highs']) == 0:
+            return jsonify({
+                "error": "No forecast data available",
+                "details": "Cannot create comparison without forecast data"
+            }), 404
+
+        oldest_date = forecast_data['forecasted_highs'][0]['date']
+
+        # Fetch observation data starting from oldest forecast date
+        observation_url = f"{WEATHER_API_URL}/observations/highs?station_id={location}&service=CLI&start={oldest_date}"
+        logger.info(f"Fetching observation highs from: {observation_url}")
+        observation_response = requests.get(observation_url, timeout=10)
+        observation_response.raise_for_status()
+        observation_data = observation_response.json()
+
+        # Create comparison dataframe
+        comparison_df = create_forecast_comparison_df(forecast_data, observation_data)
+
+        # Get summary statistics
+        summary = get_comparison_summary(comparison_df)
+
+        # Get error histogram
+        histogram = error_histogram(comparison_df, bias=True)
+
+        # Convert dataframe to dict for JSON serialization
+        return jsonify({
+            "location": location,
+            "provider": provider,
+            "oldest_date": oldest_date,
+            "summary": summary,
+            "error_histogram": histogram.to_dict(orient='records')
+        })
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to fetch comparison data: {e}")
+        return jsonify({
+            "error": f"Unable to fetch comparison data",
+            "details": str(e)
+        }), 500
+    except Exception as e:
+        logger.error(f"Error creating comparison: {e}")
+        return jsonify({
+            "error": f"Unable to create comparison",
             "details": str(e)
         }), 500
