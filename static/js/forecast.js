@@ -187,8 +187,8 @@ async function fetchForecastHighs() {
                 html += `<p><strong>${forecast.date}:</strong> ${forecast.forecasted_high}°F</p>`;
             }
 
-            // Extract the oldest date (last item in the array)
-            const oldestDate = data.forecasted_highs[data.forecasted_highs.length - 1].date;
+            // Extract the oldest date (first item in the array)
+            const oldestDate = data.forecasted_highs[0].date;
 
             infoSection.innerHTML = html;
 
