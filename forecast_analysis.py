@@ -159,6 +159,15 @@ def get_forecast_comparison():
         observation_response.raise_for_status()
         observation_data = observation_response.json()
 
+        # Get the most recent forecast (last item in the forecasted_highs array)
+        most_recent_forecast = None
+        if forecast_data.get('forecasted_highs') and len(forecast_data['forecasted_highs']) > 0:
+            most_recent = forecast_data['forecasted_highs'][-1]
+            most_recent_forecast = {
+                "date": most_recent['date'],
+                "forecasted_high": most_recent['forecasted_high']
+            }
+
         # Create comparison dataframe
         comparison_df = create_forecast_comparison_df(forecast_data, observation_data)
 
@@ -173,6 +182,7 @@ def get_forecast_comparison():
             "location": location,
             "provider": provider,
             "oldest_date": oldest_date,
+            "most_recent_forecast": most_recent_forecast,
             "summary": summary,
             "error_histogram": histogram.to_dict(orient='records')
         })

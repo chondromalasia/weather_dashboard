@@ -155,14 +155,8 @@ async function updateLocationInfo() {
 async function fetchForecastHighs() {
     const infoSection = document.getElementById('selected-location-info');
 
-    // Display selected parameters
-    let html = `
-        <h3>Selected Parameters</h3>
-        <p><strong>Location:</strong> ${selectedLocation}</p>
-        <p><strong>Provider:</strong> ${selectedProvider}</p>
-    `;
-
-    infoSection.innerHTML = html;
+    // Clear the section while loading
+    infoSection.innerHTML = '<p class="info-text">Loading analysis...</p>';
 
     // Fetch comparison analysis
     await fetchComparisonAnalysis();
@@ -195,17 +189,28 @@ async function fetchComparisonAnalysis() {
         const data = await response.json();
 
         if (data.error) {
-            // Append error to existing content
-            infoSection.innerHTML += `
-                <hr>
+            infoSection.innerHTML = `
                 <h3>Forecast Comparison Analysis</h3>
                 <p style="color: red;"><strong>Error:</strong> ${data.error}</p>
             `;
             return;
         }
 
-        // Build HTML starting with error histogram
+        // Build HTML starting with most recent forecast
         let html = `
+            <h3>Most Recent Forecast</h3>
+        `;
+
+        if (data.most_recent_forecast) {
+            html += `
+                <p><strong>Date:</strong> ${data.most_recent_forecast.date}</p>
+                <p><strong>Forecasted High:</strong> ${data.most_recent_forecast.forecasted_high}°F</p>
+            `;
+        } else {
+            html += '<p class="info-text">No recent forecast available</p>';
+        }
+
+        html += `
             <hr>
             <h3>Forecast Comparison Analysis</h3>
             <h4>Error Distribution</h4>
@@ -254,12 +259,11 @@ async function fetchComparisonAnalysis() {
             <p><strong>Min Error:</strong> ${data.summary.min_error.toFixed(2)}°F</p>
         `;
 
-        infoSection.innerHTML += html;
+        infoSection.innerHTML = html;
 
     } catch (error) {
         console.error('Error fetching comparison analysis:', error);
-        infoSection.innerHTML += `
-            <hr>
+        infoSection.innerHTML = `
             <h3>Forecast Comparison Analysis</h3>
             <p style="color: red;"><strong>Error:</strong> Failed to load comparison analysis</p>
         `;
