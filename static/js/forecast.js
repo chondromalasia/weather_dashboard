@@ -214,6 +214,7 @@ async function fetchComparisonAnalysis() {
             <hr>
             <h3>Forecast Comparison Analysis</h3>
             <h4>Error Distribution</h4>
+            <p style="font-size: 14px; color: #666;">Negative means forecast under observation, e.g. Forecast 85°F, Observation 87°F</p>
         `;
 
         // Build HTML for error histogram
