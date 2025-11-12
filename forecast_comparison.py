@@ -100,9 +100,9 @@ def get_comparison_summary(comparison_df):
     # Calculate error metrics
     return {
         'count': len(comparison_df),
-        'mean_error': float(comparison_df['difference'].mean()),
-        'mean_absolute_error': float(comparison_df['abs_difference'].mean()),
-        'rmse': float((comparison_df['difference'] ** 2).mean() ** 0.5),
-        'max_error': float(comparison_df['difference'].max()),
-        'min_error': float(comparison_df['difference'].min())
+        'mean_error': round(comparison_df['difference'].mean()),
+        'mean_absolute_error': round(comparison_df['abs_difference'].mean()),
+        'rmse': round((comparison_df['difference'] ** 2).mean() ** 0.5),
+        'max_error': round(comparison_df['difference'].max()),
+        'min_error': round(comparison_df['difference'].min())
     }
