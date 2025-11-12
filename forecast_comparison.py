@@ -20,7 +20,7 @@ def create_forecast_comparison_df(forecast_data, observation_data):
         for item in forecast_data['forecasted_highs']:
             forecast_records.append({
                 'date': item['date'],
-                'forecasted_high': float(item['forecasted_high'])
+                'forecasted_high': round(float(item['forecasted_high']))
             })
 
     forecast_df = pd.DataFrame(forecast_records)
@@ -33,7 +33,7 @@ def create_forecast_comparison_df(forecast_data, observation_data):
             date_str = item['timestamp'].split('T')[0]
             observation_records.append({
                 'date': date_str,
-                'observed_high': float(item['value'])
+                'observed_high': round(float(item['value']))
             })
 
     observation_df = pd.DataFrame(observation_records)
@@ -100,9 +100,9 @@ def get_comparison_summary(comparison_df):
     # Calculate error metrics
     return {
         'count': len(comparison_df),
-        'mean_error': round(comparison_df['difference'].mean()),
-        'mean_absolute_error': round(comparison_df['abs_difference'].mean()),
-        'rmse': round((comparison_df['difference'] ** 2).mean() ** 0.5),
-        'max_error': round(comparison_df['difference'].max()),
-        'min_error': round(comparison_df['difference'].min())
+        'mean_error': float(comparison_df['difference'].mean()),
+        'mean_absolute_error': float(comparison_df['abs_difference'].mean()),
+        'rmse': float((comparison_df['difference'] ** 2).mean() ** 0.5),
+        'max_error': float(comparison_df['difference'].max()),
+        'min_error': float(comparison_df['difference'].min())
     }
