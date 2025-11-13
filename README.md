@@ -3,7 +3,7 @@
 This is basic private dashboard that shows data about weather that I use for my own information.
 It is hosted here:
 
-weather.beepboop.site
+[weather.beepboop.site](weather.beepboop.site)
 
 It requires authentication. Please contact me if you would like to see it!
 

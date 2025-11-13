@@ -1,4 +1,4 @@
-name: Weather Dashbord CI/CD Pipeline
+name: Weather Dashboard CI/CD Pipeline
 
 on:
   push:
