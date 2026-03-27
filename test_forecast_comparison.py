@@ -23,11 +23,11 @@ def test_forecast_comparison():
     # Mock observation data
     observation_data = {
         "observations": [
-            {"timestamp": "2025-09-06T15:56:00+00:00", "value": "84.0"},
-            {"timestamp": "2025-09-07T16:21:00+00:00", "value": "86.0"},
-            {"timestamp": "2025-09-08T14:30:00+00:00", "value": "82.0"},
-            {"timestamp": "2025-09-09T15:45:00+00:00", "value": "87.0"},
-            {"timestamp": "2025-09-10T16:00:00+00:00", "value": "89.0"}
+            {"timestamp": 1757174160, "value": "84.0"},
+            {"timestamp": 1757261700, "value": "86.0"},
+            {"timestamp": 1757341800, "value": "82.0"},
+            {"timestamp": 1757432700, "value": "87.0"},
+            {"timestamp": 1757520000, "value": "89.0"}
         ]
     }
 
