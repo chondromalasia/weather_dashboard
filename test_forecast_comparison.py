@@ -12,11 +12,11 @@ def test_forecast_comparison():
     # Mock forecast data
     forecast_data = {
         "forecasted_highs": [
-            {"date": "2025-09-06", "forecasted_high": 85.0},
-            {"date": "2025-09-07", "forecasted_high": 87.0},
-            {"date": "2025-09-08", "forecasted_high": 83.0},
-            {"date": "2025-09-09", "forecasted_high": 86.0},
-            {"date": "2025-09-10", "forecasted_high": 88.0}
+            {"date": 1757174400, "forecasted_high": 85.0},
+            {"date": 1757260800, "forecasted_high": 87.0},
+            {"date": 1757347200, "forecasted_high": 83.0},
+            {"date": 1757433600, "forecasted_high": 86.0},
+            {"date": 1757520000, "forecasted_high": 88.0}
         ]
     }
 
@@ -87,9 +87,48 @@ def test_forecast_comparison():
     print("="*50)
 
 
+def test_empty_comparison():
+    """Test that comparison functions handle empty/non-overlapping data gracefully."""
+
+    # Forecast data with dates that have no matching observations
+    forecast_data = {
+        "forecasted_highs": [
+            {"date": 1757174400, "forecasted_high": 85.0},
+            {"date": 1757260800, "forecasted_high": 87.0},
+        ]
+    }
+
+    # Observations with completely different dates (no overlap)
+    observation_data = {
+        "observations": [
+            {"timestamp": 1700000000, "value": "70.0"},  # ~2023-11-14, no overlap
+        ]
+    }
+
+    print("Testing create_forecast_comparison_df with no overlapping data...")
+    df = create_forecast_comparison_df(forecast_data, observation_data)
+    assert len(df) == 0, f"Expected 0 rows, got {len(df)}"
+    print("✓ Empty DataFrame returned for non-overlapping data")
+
+    print("Testing get_comparison_summary with empty DataFrame...")
+    summary = get_comparison_summary(df)
+    assert summary['count'] == 0, f"Expected count=0, got {summary['count']}"
+    assert 'message' in summary, "Expected 'message' key in empty summary"
+    # Verify the fields that would crash the frontend are absent
+    assert 'mean_error' not in summary, "mean_error should not be present when count=0"
+    print(f"✓ Empty summary returned: {summary}")
+    print("✓ Frontend JS fix is needed (mean_error absent when count=0)")
+
+    print("\n" + "="*50)
+    print("EMPTY DATA TESTS PASSED! ✓")
+    print("="*50)
+
+
 if __name__ == "__main__":
     try:
         test_forecast_comparison()
+        print()
+        test_empty_comparison()
     except Exception as e:
         print(f"\n✗ TEST FAILED: {e}")
         import traceback

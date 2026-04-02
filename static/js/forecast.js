@@ -250,15 +250,19 @@ async function fetchComparisonAnalysis() {
         }
 
         // Add summary statistics after error distribution
-        html += `
-            <h4>Summary Statistics</h4>
-            <p><strong>Sample Size:</strong> ${data.summary.count} days</p>
-            <p><strong>Mean Error:</strong> ${data.summary.mean_error.toFixed(2)}°F</p>
-            <p><strong>Mean Absolute Error (MAE):</strong> ${data.summary.mean_absolute_error.toFixed(2)}°F</p>
-            <p><strong>Root Mean Square Error (RMSE):</strong> ${data.summary.rmse.toFixed(2)}°F</p>
-            <p><strong>Max Error:</strong> ${data.summary.max_error.toFixed(2)}°F</p>
-            <p><strong>Min Error:</strong> ${data.summary.min_error.toFixed(2)}°F</p>
-        `;
+        html += `<h4>Summary Statistics</h4>`;
+        if (data.summary.count === 0) {
+            html += `<p class="info-text">${data.summary.message || 'No overlapping forecast and observation data available'}</p>`;
+        } else {
+            html += `
+                <p><strong>Sample Size:</strong> ${data.summary.count} days</p>
+                <p><strong>Mean Error:</strong> ${data.summary.mean_error.toFixed(2)}°F</p>
+                <p><strong>Mean Absolute Error (MAE):</strong> ${data.summary.mean_absolute_error.toFixed(2)}°F</p>
+                <p><strong>Root Mean Square Error (RMSE):</strong> ${data.summary.rmse.toFixed(2)}°F</p>
+                <p><strong>Max Error:</strong> ${data.summary.max_error.toFixed(2)}°F</p>
+                <p><strong>Min Error:</strong> ${data.summary.min_error.toFixed(2)}°F</p>
+            `;
+        }
 
         infoSection.innerHTML = html;
 

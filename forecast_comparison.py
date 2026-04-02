@@ -18,8 +18,9 @@ def create_forecast_comparison_df(forecast_data, observation_data):
     forecast_records = []
     if forecast_data.get('forecasted_highs'):
         for item in forecast_data['forecasted_highs']:
+            date_str = datetime.utcfromtimestamp(item['date']).strftime('%Y-%m-%d')
             forecast_records.append({
-                'date': item['date'],
+                'date': date_str,
                 'forecasted_high': round(float(item['forecasted_high']))
             })
 
