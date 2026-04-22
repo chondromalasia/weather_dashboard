@@ -192,6 +192,7 @@ async function fetchComparisonAnalysis() {
             infoSection.innerHTML = `
                 <h3>Forecast Comparison Analysis</h3>
                 <p style="color: red;"><strong>Error:</strong> ${data.error}</p>
+                <button onclick="fetchComparisonAnalysis()">Retry</button>
             `;
             return;
         }
@@ -271,6 +272,7 @@ async function fetchComparisonAnalysis() {
         infoSection.innerHTML = `
             <h3>Forecast Comparison Analysis</h3>
             <p style="color: red;"><strong>Error:</strong> Failed to load comparison analysis</p>
+            <button onclick="fetchComparisonAnalysis()">Retry</button>
         `;
     }
 }

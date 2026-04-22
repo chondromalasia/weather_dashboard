@@ -20,7 +20,7 @@ WEATHER_API_URL = os.getenv('WEATHER_API_URL', 'http://weather-api-service')
 def home():
     try:
         logger.info(f"Attempting to connect to: {WEATHER_API_URL}/")
-        response = requests.get(f"{WEATHER_API_URL}/", timeout=10)
+        response = requests.get(f"{WEATHER_API_URL}/", timeout=120)
         logger.info(f"Response status: {response.status_code}")
         response.raise_for_status()
         api_data = response.json()

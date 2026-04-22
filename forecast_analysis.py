@@ -25,7 +25,7 @@ def get_forecast_locations():
     """Fetch available forecast locations from the weather API."""
     try:
         logger.info(f"Fetching forecast locations from: {WEATHER_API_URL}/forecast/locations")
-        response = requests.get(f"{WEATHER_API_URL}/forecast/locations", timeout=10)
+        response = requests.get(f"{WEATHER_API_URL}/forecast/locations", timeout=120)
         logger.info(f"Response status: {response.status_code}")
         response.raise_for_status()
         locations = response.json()
@@ -44,7 +44,7 @@ def get_forecast_providers():
     """Fetch available forecast providers from the weather API."""
     try:
         logger.info(f"Fetching forecast providers from: {WEATHER_API_URL}/forecast/providers")
-        response = requests.get(f"{WEATHER_API_URL}/forecast/providers", timeout=10)
+        response = requests.get(f"{WEATHER_API_URL}/forecast/providers", timeout=120)
         logger.info(f"Response status: {response.status_code}")
         response.raise_for_status()
         providers = response.json()
@@ -75,7 +75,7 @@ def get_forecast_highs():
     try:
         url = f"{WEATHER_API_URL}/forecast/highs?location={location}&provider={provider}"
         logger.info(f"Fetching forecast highs from: {url}")
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=120)
         logger.info(f"Response status: {response.status_code}")
         response.raise_for_status()
         highs = response.json()
@@ -107,7 +107,7 @@ def get_observation_highs():
     try:
         url = f"{WEATHER_API_URL}/observations/highs?station_id={station_id}&service={service}&start={start}"
         logger.info(f"Fetching observation highs from: {url}")
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=120)
         logger.info(f"Response status: {response.status_code}")
         response.raise_for_status()
         observations = response.json()
@@ -139,7 +139,7 @@ def get_forecast_comparison():
         # Fetch forecast data
         forecast_url = f"{WEATHER_API_URL}/forecast/highs?location={location}&provider={provider}"
         logger.info(f"Fetching forecast highs from: {forecast_url}")
-        forecast_response = requests.get(forecast_url, timeout=10)
+        forecast_response = requests.get(forecast_url, timeout=120)
         forecast_response.raise_for_status()
         forecast_data = forecast_response.json()
 
@@ -155,7 +155,7 @@ def get_forecast_comparison():
         # Fetch observation data starting from oldest forecast date
         observation_url = f"{WEATHER_API_URL}/observations/highs?station_id={location}&service=CLI&start={oldest_date}"
         logger.info(f"Fetching observation highs from: {observation_url}")
-        observation_response = requests.get(observation_url, timeout=10)
+        observation_response = requests.get(observation_url, timeout=120)
         observation_response.raise_for_status()
         observation_data = observation_response.json()
 
