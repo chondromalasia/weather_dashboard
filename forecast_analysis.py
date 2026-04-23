@@ -1,6 +1,7 @@
 import os
 import requests
 import logging
+from datetime import datetime
 from flask import Blueprint, render_template, jsonify
 from forecast_comparison import create_forecast_comparison_df, error_histogram, get_comparison_summary
 
@@ -159,14 +160,20 @@ def get_forecast_comparison():
         observation_response.raise_for_status()
         observation_data = observation_response.json()
 
-        # Get the most recent forecast (forecast with the maximum date)
+        # Get the forecast for today (or most recent past date if today's isn't available)
         most_recent_forecast = None
         if forecast_data.get('forecasted_highs') and len(forecast_data['forecasted_highs']) > 0:
-            most_recent = max(forecast_data['forecasted_highs'], key=lambda x: x['date'])
-            most_recent_forecast = {
-                "date": most_recent['date'],
-                "forecasted_high": most_recent['forecasted_high']
-            }
+            today = datetime.utcnow().date()
+            past_forecasts = [
+                f for f in forecast_data['forecasted_highs']
+                if datetime.utcfromtimestamp(f['date']).date() <= today
+            ]
+            if past_forecasts:
+                most_recent = max(past_forecasts, key=lambda x: x['date'])
+                most_recent_forecast = {
+                    "date": datetime.utcfromtimestamp(most_recent['date']).strftime('%Y-%m-%d'),
+                    "forecasted_high": most_recent['forecasted_high']
+                }
 
         # Create comparison dataframe
         comparison_df = create_forecast_comparison_df(forecast_data, observation_data)
