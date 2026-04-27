@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kalshi Comparison - Weather Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Kalshi Comparison</h1>
+
+        <div class="navigation">
+            <a href="/" class="nav-link">Back to Dashboard</a>
+        </div>
+
+        <div class="forecast-section">
+            <div class="location-selector">
+                <label for="location-dropdown">Select Location:</label>
+                <select id="location-dropdown" class="dropdown">
+                    <option value="">Loading locations...</option>
+                </select>
+            </div>
+
+            <div class="provider-selector">
+                <label for="provider-dropdown">Select Provider:</label>
+                <select id="provider-dropdown" class="dropdown">
+                    <option value="">Loading providers...</option>
+                </select>
+            </div>
+
+            <div id="results-section">
+                <p class="info-text">Select a location and provider to compare model probabilities against Kalshi markets.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/kalshi_comparison.js') }}"></script>
+</body>
+</html>
