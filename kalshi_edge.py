@@ -12,15 +12,17 @@ def calculate_kalshi_edge(forecast, error_histogram, kalshi_markets):
         bias = row['Error (°F)']
         if bias is None:
             continue
-        prob = row['Percentage'] / 100
-        actual_temp = forecast - bias
+        prob = float(row['Percentage']) / 100
+        actual_temp = forecast - float(bias)
         forecast_probs[actual_temp] = forecast_probs.get(actual_temp, 0) + prob
 
     results = []
     for market in kalshi_markets:
-        floor = market.get('floor_strike')
-        cap = market.get('cap_strike')
+        floor = float(market['floor_strike']) if market.get('floor_strike') is not None else None
+        cap = float(market['cap_strike']) if market.get('cap_strike') is not None else None
 
+        # Kalshi buckets: cap_strike is exclusive upper bound, floor_strike is inclusive lower bound.
+        # e.g. cap=62 → "61 or lower" (temp < 62), floor=62 → "62 or higher" (temp >= 62)
         model_prob = 0
         if floor is None:
             for temp, prob in forecast_probs.items():
@@ -28,15 +30,15 @@ def calculate_kalshi_edge(forecast, error_histogram, kalshi_markets):
                     model_prob += prob
         elif cap is None:
             for temp, prob in forecast_probs.items():
-                if temp > floor:
+                if temp >= floor:
                     model_prob += prob
         else:
             for temp, prob in forecast_probs.items():
-                if floor <= temp <= cap:
+                if floor <= temp < cap:
                     model_prob += prob
 
-        market_yes = market.get('yes_bid') or 0
-        market_no = 100 - (market.get('yes_ask') or 100)
+        market_yes = float(market.get('yes_bid') or 0) * 100
+        market_no = 100 - float(market.get('yes_ask') or 1) * 100
         yes_edge = round(model_prob * 100 - market_yes, 1)
         no_edge = round((1 - model_prob) * 100 - market_no, 1)
 

@@ -1,5 +1,6 @@
 import os
 import logging
+import traceback
 import requests
 from datetime import datetime
 from flask import Blueprint, jsonify, render_template, request
@@ -177,5 +178,5 @@ def get_kalshi_comparison():
         logger.error(f"Kalshi comparison fetch failed: {e}")
         return jsonify({"error": "Unable to fetch data", "details": str(e)}), 500
     except Exception as e:
-        logger.error(f"Kalshi comparison error: {e}")
+        logger.error(f"Kalshi comparison error: {e}\n{traceback.format_exc()}")
         return jsonify({"error": "Unable to compute comparison", "details": str(e)}), 500
