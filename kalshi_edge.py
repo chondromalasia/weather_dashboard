@@ -21,12 +21,12 @@ def calculate_kalshi_edge(forecast, error_histogram, kalshi_markets):
         floor = float(market['floor_strike']) if market.get('floor_strike') is not None else None
         cap = float(market['cap_strike']) if market.get('cap_strike') is not None else None
 
-        # Kalshi buckets: cap_strike is exclusive upper bound, floor_strike is inclusive lower bound.
-        # e.g. cap=62 → "61 or lower" (temp < 62), floor=62 → "62 or higher" (temp >= 62)
+        # Kalshi buckets: cap_strike and floor_strike are inclusive bounds.
+        # e.g. "58° to 59°" has floor=58, cap=59; "57° or below" has cap=57; "66° or above" has floor=66.
         model_prob = 0
         if floor is None:
             for temp, prob in forecast_probs.items():
-                if temp < cap:
+                if temp <= cap:
                     model_prob += prob
         elif cap is None:
             for temp, prob in forecast_probs.items():
@@ -34,7 +34,7 @@ def calculate_kalshi_edge(forecast, error_histogram, kalshi_markets):
                     model_prob += prob
         else:
             for temp, prob in forecast_probs.items():
-                if floor <= temp < cap:
+                if floor <= temp <= cap:
                     model_prob += prob
 
         market_yes = float(market.get('yes_bid') or 0) * 100
