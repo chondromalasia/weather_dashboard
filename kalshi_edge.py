@@ -37,8 +37,8 @@ def calculate_kalshi_edge(forecast, error_histogram, kalshi_markets):
                 if floor <= temp <= cap:
                     model_prob += prob
 
-        market_yes = float(market.get('yes_bid') or 0) * 100
-        market_no = 100 - float(market.get('yes_ask') or 1) * 100
+        market_yes = round(float(market.get('yes_bid') or 0) * 100, 1)
+        market_no = round(100 - float(market.get('yes_ask') or 1) * 100, 1)
         yes_edge = round(model_prob * 100 - market_yes, 1)
         no_edge = round((1 - model_prob) * 100 - market_no, 1)
 
