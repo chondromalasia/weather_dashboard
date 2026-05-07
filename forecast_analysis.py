@@ -38,7 +38,7 @@ def _fetch_kalshi_markets(location):
 def _most_recent_forecast(forecast_data):
     highs = forecast_data.get('forecasted_highs', [])
     today = datetime.utcnow().date()
-    past = [f for f in highs if datetime.utcfromtimestamp(f['date']).date() <= today]
+    past = [f for f in highs if f['forecasted_high'] is not None and datetime.utcfromtimestamp(f['date']).date() <= today]
     if not past:
         return None
     f = max(past, key=lambda x: x['date'])
