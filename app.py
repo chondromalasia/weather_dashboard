@@ -3,11 +3,13 @@ import requests
 import logging
 from flask import Flask, render_template, jsonify
 from forecast_analysis import forecast_bp
+from intraday_comparison import intraday_bp
 
 app = Flask(__name__)
 
 # Register the forecast analysis blueprint
 app.register_blueprint(forecast_bp)
+app.register_blueprint(intraday_bp)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

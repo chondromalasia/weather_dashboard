@@ -1,3 +1,13 @@
+def _make_subtitle(floor, cap):
+    if floor is None and cap is not None:
+        return f"{int(cap)}° or below"
+    if cap is None and floor is not None:
+        return f"{int(floor)}° or above"
+    if floor is not None and cap is not None:
+        return f"{int(floor)}° to {int(cap)}°"
+    return ""
+
+
 def calculate_kalshi_edge(forecast, error_histogram, kalshi_markets):
     """
     For each Kalshi bucket, compute the model's implied probability and edge vs the market.
@@ -42,8 +52,9 @@ def calculate_kalshi_edge(forecast, error_histogram, kalshi_markets):
         yes_edge = round(model_prob * 100 - market_yes, 1)
         no_edge = round((1 - model_prob) * 100 - market_no, 1)
 
+        subtitle = market.get('subtitle') or _make_subtitle(floor, cap)
         results.append({
-            'subtitle': market.get('subtitle', ''),
+            'subtitle': subtitle,
             'floor': floor,
             'cap': cap,
             'model_prob': round(model_prob * 100, 1),
