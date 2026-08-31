@@ -85,8 +85,9 @@ function renderNowcast(data) {
     const inp = nc.inputs;
     const inputBits = [
         ['KNYNEWYO1686', inp.KNYNEWYO1686],
+        ['KNYNEWYO1796', inp.KNYNEWYO1796],
         ['KNYNEWYO270', inp.KNYNEWYO270],
-    ].map(([st, i]) => i.used
+    ].filter(([, i]) => i).map(([st, i]) => i.used
         ? `${st}: Δ1h ${signed(i.incr_f)}°, vs METAR ${signed(i.lvl_f)}°`
         : `${st}: no data`
     ).concat(`prev METAR move ${signed(inp.prev_change_f)}°`).join(' &nbsp;&middot;&nbsp; ');

@@ -78,27 +78,29 @@ def _iso_utc(epoch):
 # climatology baseline). The class probabilities give P(METAR(t) >= k) for the
 # Kalshi hourly threshold ladder. Frozen snapshot — refit from the notebook.
 #
-# Feature order (8):
-#   incr_1686, lvl_1686, incr_270, lvl_270, prev_change,
+# Feature order (10):
+#   incr_1686, lvl_1686, incr_1796, lvl_1796, incr_270, lvl_270, prev_change,
 #   tod_morning, tod_midday, tod_afternoon      (night = reference)
 # where  incr_s = station latest temp - its reading ~1h earlier   [= last_hour_delta]
 #        lvl_s  = station latest temp - metar_prev
 #        prev_change = metar_prev - the METAR before it
 # A station with no usable ~1h delta contributes 0 (matches the notebook fillna).
-# The first five (continuous) features are standardised before the linear layer.
-NOWCAST_MODEL_TAG = 'mnl-change @ 2026-08-28'
+# The first seven (continuous) features are standardised before the linear layer.
+# Refit 2026-08-31 on the full 2-year backfill (2024-08-27..) with all three
+# KNYC PWS stations; 1796 is the densest/cleanest and now carries most weight.
+NOWCAST_MODEL_TAG = 'mnl-change 3sta @ 2026-08-31'
 NOWCAST_CLASSES = [-3, -2, -1, 0, 1, 2, 3]
-NOWCAST_SCALER_MEAN = [0.006935, 2.041844, -0.014263, 2.434358, -0.002364]
-NOWCAST_SCALER_SCALE = [1.679055, 1.628878, 2.104446, 2.757476, 1.86397]
-NOWCAST_INTERCEPT = [-2.06376, 0.094281, 1.582622, 2.478408, 1.145113, -1.112837, -2.123827]
+NOWCAST_SCALER_MEAN = [0.0133964, 1.2573, 0.00262, 1.55098, -0.00137694, 1.14194, -0.00516351]
+NOWCAST_SCALER_SCALE = [1.28294, 1.48708, 1.43336, 1.56256, 1.69688, 2.14837, 1.56039]
+NOWCAST_INTERCEPT = [-3.00373, -0.245291, 2.19107, 2.88558, 1.63889, -1.08313, -2.38338]
 NOWCAST_COEF = [
-    [-1.465342, -1.809739, -1.371444, -0.086785, 0.222545, -1.209564, -0.326606, 0.600085],
-    [-0.981238, -0.763237, -1.232081, -0.230419, -0.113050, -1.383454, -0.541012, 0.264967],
-    [-0.436441, -0.232421, -0.437291, -0.403665, -0.544781, -0.879918, -0.534520, 0.468870],
-    [0.299934, 0.053363, 0.217400, 0.059339, -0.275587, -0.564562, -1.051264, -0.419780],
-    [0.805884, 0.398286, 0.546927, 0.146478, -0.174642, 0.566230, 0.103942, -0.271826],
-    [0.737961, 1.057129, 1.060358, 0.262607, 0.242173, 1.810225, 1.182676, 0.130986],
-    [1.039242, 1.296619, 1.216131, 0.252445, 0.643341, 1.661043, 1.166785, -0.773302],
+    [-0.825908, -0.998665, -1.11278, -1.56486, -1.65228, -0.0279741, 0.436493, -0.900043, -1.169, 0.318502],
+    [-0.723712, -0.511558, -0.835749, -0.9506, -1.04971, -0.202573, 0.180271, -1.23985, -1.18944, 0.306263],
+    [-0.298706, -0.0392245, -0.542871, -0.144196, -0.584903, -0.362838, 0.11271, -0.999427, -1.08159, -0.0234337],
+    [0.18831, 0.152403, 0.0987927, 0.409545, 0.262543, -0.236917, -0.206568, -0.327447, -0.402684, -0.0402158],
+    [0.440161, 0.273064, 0.643926, 0.617229, 0.667525, 0.0358211, -0.261062, 0.375499, 0.371259, -0.248207],
+    [0.531728, 0.449303, 0.800662, 0.749726, 1.08439, 0.302708, -0.210565, 1.75832, 1.86047, 0.321306],
+    [0.688127, 0.674677, 0.948014, 0.883156, 1.27244, 0.491773, -0.051279, 1.33295, 1.61098, -0.634214],
 ]
 
 # k relative to round(metar_prev) to show on the ladder.
@@ -106,10 +108,10 @@ NOWCAST_LADDER_SPAN = (-2, 6)
 
 # Held-out ladder log-loss by local-time band (model vs the no-model baseline).
 NOWCAST_LADDER_LOGLOSS = {
-    '05-10 morning': {'model': 0.25, 'baseline': 0.40},
-    '10-15 midday': {'model': 0.37, 'baseline': 0.44},
-    '15-20 afternoon': {'model': 0.37, 'baseline': 0.39},
-    '20-05 night': {'model': 0.21, 'baseline': 0.27},
+    '05-10 morning': {'model': 0.22, 'baseline': 0.41},
+    '10-15 midday': {'model': 0.35, 'baseline': 0.45},
+    '15-20 afternoon': {'model': 0.29, 'baseline': 0.40},
+    '20-05 night': {'model': 0.21, 'baseline': 0.30},
 }
 
 
@@ -159,15 +161,16 @@ def _compute_nowcast(series, metar_points, now_local):
     band = _tod_band(now_local.hour)
 
     incr_1686, lvl_1686, used_1686 = _station_change_features(series, 'KNYNEWYO1686', metar_prev)
+    incr_1796, lvl_1796, used_1796 = _station_change_features(series, 'KNYNEWYO1796', metar_prev)
     incr_270, lvl_270, used_270 = _station_change_features(series, 'KNYNEWYO270', metar_prev)
 
     feats = [
-        incr_1686, lvl_1686, incr_270, lvl_270, prev_change,
+        incr_1686, lvl_1686, incr_1796, lvl_1796, incr_270, lvl_270, prev_change,
         1.0 if band == '05-10 morning' else 0.0,
         1.0 if band == '10-15 midday' else 0.0,
         1.0 if band == '15-20 afternoon' else 0.0,
     ]
-    # standardise the five continuous features
+    # standardise the seven continuous features
     z = list(feats)
     for i, (mean, scale) in enumerate(zip(NOWCAST_SCALER_MEAN, NOWCAST_SCALER_SCALE)):
         z[i] = (feats[i] - mean) / scale
@@ -211,6 +214,8 @@ def _compute_nowcast(series, metar_points, now_local):
         'inputs': {
             'KNYNEWYO1686': {'incr_f': round(incr_1686, 2), 'lvl_f': round(lvl_1686, 2),
                              'used': used_1686},
+            'KNYNEWYO1796': {'incr_f': round(incr_1796, 2), 'lvl_f': round(lvl_1796, 2),
+                             'used': used_1796},
             'KNYNEWYO270': {'incr_f': round(incr_270, 2), 'lvl_f': round(lvl_270, 2),
                             'used': used_270},
             'prev_change_f': prev_change,

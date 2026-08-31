@@ -58,6 +58,7 @@ def test_nowcast_needs_two_metar_obs():
 def test_nowcast_shape_and_ladder_monotonicity():
     series = [
         _wunderground("KNYNEWYO1686", 73.4, 0.8),
+        _wunderground("KNYNEWYO1796", 73.6, 0.9),
         _wunderground("KNYNEWYO270", 74.0, 1.5),
     ]
     nc = _compute_nowcast(series, _metar(70.0, 71.0), NY_MIDDAY)
@@ -66,6 +67,8 @@ def test_nowcast_shape_and_ladder_monotonicity():
     assert nc["kbase"] == 71
     assert nc["metar_prev_f"] == 71.0
     assert nc["inputs"]["prev_change_f"] == 1.0
+    assert {"KNYNEWYO1686", "KNYNEWYO1796", "KNYNEWYO270"} <= set(nc["inputs"])
+    assert nc["inputs"]["KNYNEWYO1796"]["used"] is True
 
     probs = [c["p"] for c in nc["class_probs"]]
     assert [c["change"] for c in nc["class_probs"]] == NOWCAST_CLASSES
@@ -90,6 +93,7 @@ def test_nowcast_missing_station_is_zeroed_not_fatal():
     assert nc["available"] is True
     assert nc["inputs"]["KNYNEWYO1686"]["used"] is False
     assert nc["inputs"]["KNYNEWYO1686"]["incr_f"] == 0.0
+    assert nc["inputs"]["KNYNEWYO1796"]["used"] is False
     assert nc["inputs"]["KNYNEWYO270"]["used"] is True
     assert abs(sum(c["p"] for c in nc["class_probs"]) - 1.0) < 1e-6
 
@@ -97,11 +101,13 @@ def test_nowcast_missing_station_is_zeroed_not_fatal():
 def test_nowcast_positive_pws_trend_shifts_expectation_up():
     metar = _metar(70.0, 71.0)
     up = _compute_nowcast(
-        [_wunderground("KNYNEWYO1686", 75.0, 2.5), _wunderground("KNYNEWYO270", 75.0, 2.5)],
+        [_wunderground("KNYNEWYO1686", 75.0, 2.5), _wunderground("KNYNEWYO1796", 75.0, 2.5),
+         _wunderground("KNYNEWYO270", 75.0, 2.5)],
         metar, NY_MIDDAY,
     )
     down = _compute_nowcast(
-        [_wunderground("KNYNEWYO1686", 68.0, -2.5), _wunderground("KNYNEWYO270", 68.0, -2.5)],
+        [_wunderground("KNYNEWYO1686", 68.0, -2.5), _wunderground("KNYNEWYO1796", 68.0, -2.5),
+         _wunderground("KNYNEWYO270", 68.0, -2.5)],
         metar, NY_MIDDAY,
     )
     assert up["expected_change_f"] > down["expected_change_f"]
