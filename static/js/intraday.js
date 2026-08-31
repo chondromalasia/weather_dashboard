@@ -114,6 +114,25 @@ function renderNowcast(data) {
         <p class="muted">${nc.model} &nbsp;&middot;&nbsp; ${inputBits}</p>`;
 }
 
+// Per station, per local-time band: [typical °F warm bias vs the official KNYC
+// METAR, residual scatter around that correction]. From the Aug-2024 – Aug-2026
+// backfill ("Wunderground vs NWS - KNYC" notebook).
+// 1686 / 1796 sit ~±1.2° any time — their corrected level is usable.
+// 270 is solar-loaded: tight at night (±0.9°) but ~±2° in the afternoon sun,
+// so its *level* isn't reliable then — lean on its hourly change instead.
+const STATION_BIAS = {
+    KNYNEWYO1796: { morning: [1.9, 1.1], midday: [1.8, 1.3], afternoon: [2.0, 1.1], night: [2.0, 1.0] },
+    KNYNEWYO1686: { morning: [2.0, 1.2], midday: [1.1, 1.3], afternoon: [2.1, 1.2], night: [2.3, 1.2] },
+    KNYNEWYO270:  { morning: [1.2, 1.4], midday: [2.8, 2.0], afternoon: [2.1, 2.1], night: [0.7, 0.9] },
+};
+
+function todBand(hour) {
+    if (hour >= 5 && hour < 10) return 'morning';
+    if (hour >= 10 && hour < 15) return 'midday';
+    if (hour >= 15 && hour < 20) return 'afternoon';
+    return 'night';
+}
+
 // Temperature change over the last available hour, per station. Anchored on
 // each station's own latest reading (see backend `_last_hour_delta`), not
 // wall-clock now.
@@ -139,15 +158,39 @@ function renderDeltas(data) {
                 `<span class="muted">over ${d.span_minutes} min</span>`;
         }
 
-        return `<tr><td>${s.station_id}</td><td>${latestCell}</td><td>${changeCell}</td></tr>`;
+        const bias = latest && STATION_BIAS[s.station_id]
+            ? STATION_BIAS[s.station_id][todBand(Math.floor(latest.hour))]
+            : null;
+        let metarCell;
+        if (bias) {
+            const [off, sd] = bias;
+            const loose = sd >= 1.8;   // level not reliable this time of day
+            metarCell =
+                `<span class="muted">&minus;${off.toFixed(1)}° &rarr;</span> ` +
+                `<strong>${(latest.temp_f - off).toFixed(1)}°F</strong> ` +
+                `<span class="muted" style="${loose ? 'color:#c92a2a' : ''}">` +
+                `&plusmn;${sd.toFixed(1)}${loose ? ' — use Δ' : ''}</span>`;
+        } else if (s.source === 'nws_metar') {
+            metarCell = '<span class="muted">(this is METAR)</span>';
+        } else {
+            metarCell = '—';
+        }
+
+        return `<tr><td>${s.station_id}</td><td>${latestCell}</td>` +
+               `<td>${changeCell}</td><td>${metarCell}</td></tr>`;
     }).join('');
 
     el.innerHTML = `
         <h3>1-hour change</h3>
         <table class="delta-table">
-            <thead><tr><th>Station</th><th>Latest</th><th>Change vs. ~1h earlier</th></tr></thead>
+            <thead><tr><th>Station</th><th>Latest</th>
+                <th>Change vs. ~1h earlier</th><th>implied METAR</th></tr></thead>
             <tbody>${rows}</tbody>
-        </table>`;
+        </table>
+        <p class="muted" style="max-width:560px">
+            <em>implied METAR</em> = the station's reading minus its typical warm bias for this
+            time of day, &plusmn; the residual scatter. When the scatter is wide (KNYNEWYO270 in
+            afternoon sun) the corrected <em>level</em> isn't reliable — its hourly change still is.</p>`;
 }
 
 function formatHour(h) {
@@ -167,14 +210,21 @@ function render(data) {
         };
     });
 
+    // Trim the x-axis: start at 06:00, end ~1h past the latest reading (not a
+    // full 24h — most of the night is empty).
+    const X_START = 6;
+    const maxHour = data.series.reduce(
+        (m, s) => s.points.reduce((mm, p) => Math.max(mm, p.hour), m), X_START);
+    const xMax = Math.min(24, Math.max(X_START + 2, Math.ceil(maxHour) + 1));
+
     const options = {
         responsive: true,
         interaction: { mode: 'nearest', intersect: false },
         scales: {
             x: {
                 type: 'linear',
-                min: 0,
-                max: 24,
+                min: X_START,
+                max: xMax,
                 title: { display: true, text: `Hour of day (${data.timezone})` },
                 ticks: { stepSize: 2, callback: v => String(v).padStart(2, '0') + ':00' },
             },
