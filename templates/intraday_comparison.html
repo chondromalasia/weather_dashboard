@@ -24,6 +24,11 @@
         }
         #deltas { margin-top: 24px; }
         #deltas h3 { margin-bottom: 8px; }
+        .station-notes { margin-top: 22px; max-width: 640px; font-size: 13px; color: #444; }
+        .station-notes summary { cursor: pointer; font-weight: bold; color: #333; }
+        .station-notes ul { margin: 8px 0; padding-left: 20px; }
+        .station-notes li { margin: 5px 0; }
+        .station-notes .muted { color: #999; font-size: 12px; }
         .delta-table { border-collapse: collapse; width: 100%; max-width: 560px; }
         .delta-table th, .delta-table td {
             text-align: left; padding: 8px 10px; border-bottom: 1px solid #ddd; font-size: 14px;
@@ -54,6 +59,27 @@
         <div id="nowcast"></div>
 
         <div id="deltas"></div>
+
+        <details class="station-notes">
+            <summary>About the three PWS stations</summary>
+            <p>All three Wunderground stations read <strong>warmer than the official KNYC
+            METAR</strong>. The nowcast uses each one differently:</p>
+            <ul>
+                <li><strong>KNYNEWYO1796</strong> &mdash; densest (5-min) and cleanest.
+                Sits a steady <strong>~+1.9&deg;F</strong> above METAR, roughly flat all day.
+                Best single station; its <em>value</em> is trustworthy after the fixed offset.</li>
+                <li><strong>KNYNEWYO1686</strong> &mdash; also clean,
+                <strong>~+2&deg;F</strong> warm. Sharpest near midday (~+1&deg;F), drifts
+                warmer overnight (~+2.3&deg;F). Trust its value, especially midday.</li>
+                <li><strong>KNYNEWYO270</strong> &mdash; <strong>solar-loaded</strong>:
+                ~+2.8&deg;F at midday vs ~+0.7&deg;F at night, spiking past +11&deg;F in strong
+                sun. Also reports only every ~15&nbsp;min. Trust its hourly <em>change</em>,
+                not its level.</li>
+            </ul>
+            <p class="muted">From the Aug&nbsp;2024&ndash;Aug&nbsp;2026 backfill
+            (&ldquo;Wunderground vs NWS &mdash; KNYC&rdquo; notebook). Blend of all three
+            beats any single station.</p>
+        </details>
 
         <p id="status">Loading&hellip;</p>
     </div>
